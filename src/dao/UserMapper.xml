@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dao.UserDao">
+	<select id="getList" resultMap="UserList">
+		select * from info
+	</select>
+	
+	<resultMap type="User" id="UserList">
+		<result property="id" column="id"/>
+		<result property="name" column="name"/>
+	</resultMap>
+</mapper>

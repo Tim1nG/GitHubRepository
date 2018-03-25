@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="
+    	http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+        
+	<!-- 1配置自动扫描 -->
+	<context:component-scan base-package="dao, service">
+		<!-- 不扫描控制层 -->
+		<!-- 
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		 -->
+	</context:component-scan>
+	
+	<!-- 2配置数据源 -->
+	
+		<!-- 读取配置文件 -->
+	<bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath:jdbc.properties</value>
+		</property>
+	</bean>
+	
+		<!-- 配置DataSource -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${driver}"></property>
+		<property name="url" value="${url}"></property>
+		<property name="username" value="${user}"></property>
+		<property name="password" value="${password}"></property>
+	</bean>
+	
+	<!-- 3配置mybatis -->
+	
+		<!-- 配置mybatis核心SqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 配置mybatis的主配置文件 -->
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<!-- 扫描mapper文件 -->
+		<property name="mapperLocations" value="classpath:dao/UserMapper.xml"></property>
+	</bean>
+	
+	<!--  4配置mybatis的转换器，  
+        目的：通过该配置，可以使得mybatis.xml文件中不必再关联实体映射配置文件（xxxMapper.xml）了，  
+            并最终实现了dao层只需要 接口+xxxMapper.xml配置文件  
+        原理:对于在basePackage设置的包（包括子包）下的接口类，扫描所有xxxMapper.xml文件，如果某个文件的名称空间是该接口的全名，  
+                那么存在与名称空间相同的接口将被转换成spring的BEAN，在调用 的地方通过@Autowired方式将可以注入接口实例，  
+                我们在service实现层调用dao接口的方法时，则会自动将接口的全类名当作名称空间，方法名当作sql语句的id值，来执行  
+                对应的sql语句，并返回相应结果（因此daoimpl层就没有作用了）   -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+		<property name="basePackage" value="dao"></property>
+	</bean>
+	
+	<!-- 5配置事务管理器 -->
+	<bean id="transactionManager" 
+		 class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+		<!-- 开启事务注解扫描 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+</beans>
